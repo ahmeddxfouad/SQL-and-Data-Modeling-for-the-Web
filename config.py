@@ -1,5 +1,6 @@
 import os
-SECRET_KEY = os.urandom(32)
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-for-fyyur")
+WTF_CSRF_ENABLED = True
 # Grabs the folder where the script runs.
 basedir = os.path.abspath(os.path.dirname(__file__))
 

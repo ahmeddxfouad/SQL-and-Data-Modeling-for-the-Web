@@ -76,6 +76,17 @@
 </section>
 
 <a href="/venues/{{ venue.id }}/edit"><button class="btn btn-primary btn-lg">Edit</button></a>
-
+<button id="delete-venue" class="btn btn-danger">Delete Venue</button>
+<script>
+  document.getElementById('delete-venue').addEventListener('click', async () => {
+    if (!confirm('Delete this venue? This cannot be undone.')) return;
+    const resp = await fetch(window.location.pathname, { method: 'DELETE' });
+    if (resp.status === 204) {
+      window.location.href = '/';
+    } else {
+      alert('Failed to delete venue.');
+    }
+  });
+</script>
 {% endblock %}
 
