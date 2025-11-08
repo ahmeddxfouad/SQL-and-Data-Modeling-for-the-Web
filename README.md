@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SQL-and-Data-Modeling-for-the-Web
 =======
 Fyyur
