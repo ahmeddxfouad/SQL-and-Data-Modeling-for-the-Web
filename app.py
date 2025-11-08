@@ -2,19 +2,19 @@
 # Imports
 #----------------------------------------------------------------------------#
 
-import json
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
 from sqlalchemy import and_
 from forms import *
 from flask_migrate import Migrate
-from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
+from model import db, Venue, Show, Artist
+
+# from models import db, Venue, Artist, Show
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -23,83 +23,8 @@ from datetime import datetime
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
-
-# TODO: connect to a local postgresql database
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Show(db.Model):
-    __tablename__ = "shows"
-    id = db.Column(db.Integer, primary_key=True)
-    start_time = db.Column(db.DateTime, nullable=False)
-
-    artist_id = db.Column(db.Integer, db.ForeignKey("artists.id", ondelete="CASCADE"), nullable=False)
-    venue_id  = db.Column(db.Integer, db.ForeignKey("venues.id",  ondelete="CASCADE"), nullable=False)
-
-    # Convenient joins
-    artist = db.relationship("Artist", back_populates="shows", lazy="joined")
-    venue = db.relationship("Venue", back_populates="shows", lazy="joined")
-
-    def __repr__(self):
-        return f"<Show id={self.id} artist_id={self.artist_id} venue_id={self.venue_id}>"
-
-
-class Venue(db.Model):
-    __tablename__ = "venues"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(500))
-    website_link = db.Column(db.String(500))
-    seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
-    seeking_description = db.Column(db.String(500))
-    # Keep genres as a comma-separated string (beginner-friendly & portable)
-    genres = db.Column(ARRAY(db.String()), nullable=False)
-
-    # one-to-many via Show
-    shows = db.relationship("Show", back_populates="venue", cascade="all, delete-orphan", lazy="selectin")
-
-    # Basic “uniqueness” to prevent obvious duplicates (not required, but helpful)
-    __table_args__ = (
-        db.UniqueConstraint("name", "city", "state", name="uq_venue_name_city_state"),
-    )
-
-    def __repr__(self):
-        return f"<Venue id={self.id} name={self.name}>"
-
-
-class Artist(db.Model):
-    __tablename__ = "artists"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(500))
-    website_link = db.Column(db.String(500))
-    seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
-    seeking_description = db.Column(db.String(500))
-    genres = db.Column(ARRAY(db.String()), nullable=False)
-
-    shows = db.relationship("Show", back_populates="artist", cascade="all, delete-orphan", lazy="selectin")
-
-    __table_args__ = (
-        db.UniqueConstraint("name", "city", "state", name="uq_artist_name_city_state"),
-    )
-
-    def __repr__(self):
-        return f"<Artist id={self.id} name={self.name}>"
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -122,7 +47,6 @@ app.jinja_env.filters['datetime'] = format_datetime
 @app.route('/')
 def index():
   return render_template('pages/home.html')
-
 
 #  Venues
 #  ----------------------------------------------------------------
